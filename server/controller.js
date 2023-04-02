@@ -26,13 +26,24 @@ module.exports = {
             );
 
         
-     
+       sequelize.query(`
         CREATE TABLE cities(
-            city_id SERIAL PRIMARY Key,
+            city_id SERIAL PRIMARY KEY,
             name VARCHAR,
             rating INT,
             country_id INT REFERENCES country(id)
             );
+            `)
+            .then(() => {
+                console.log('DB seeded!')
+                res.sendStatus(200)
+            })
+            .catch((err) => {
+                console.log('you had a Sequelize error in your seed function:')
+                console.log(err)
+                res.status(500).send(err)
+            })
+        },
         
             
         
@@ -243,13 +254,10 @@ module.exports = {
      getCountries: (req, res) => {
         sequelize.query(`
         SELECT * FROM countries
-        // .then(dbRes) => {
-        //     res.status(200).send(dbRes[0])
-        // }
-        `)
         .then(dbRes) => {
             res.status(200).send(dbRes[0])
         }
+        `)
     },
 
     createCity: (req, res) => {
@@ -260,9 +268,47 @@ module.exports = {
             (name, rating, country_id)
             VALUES
             ('${name}', ${rating}, ${country})
-        `)
         .then(dbRes) => {
             res.status(200).send(dbRes[0])
         }
+        `)
+    },
+
+    getCities: (req, res) => {
+        sequelize.query(`
+            SELECT FROM cities
+                city_id,
+                name AS city
+                rating,
+            SELECT FROM countries
+                country_id,
+                name AS country
+            FROM cities
+            JOIN countries
+            ON city_id = country_id
+         `)
+            .then(dbRes) => {
+                res.staus(200).send(dbRes[0])
+            }
+    },
+
+    deleteCity: (req, res) => {
+        const {city_id} = req.params
+
+        sequelize.query(`
+            DELETE FROM cities
+            WHERE city_id = ${city_id}
+        `)
+        .then((dbRes) => {
+            console.log('deleteCity success!')
+            res.status(200).send(dbRes[0])
+        })
+        .catch((theseHands) => {
+            console.log('Error with deleteCity')
+            console.log(theseHands)
+            res.status(500).send(theseHands)
+        })
     }
+
+
 }
